@@ -1,14 +1,18 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include "SDL/include/SDL.h"
+#include "SDL\include\SDL.h"
+#include "SDL_image\include\SDL_image.h"
 
 #pragma comment( lib, "SDL/libx86/SDL2.lib")
 #pragma comment( lib, "SDL/libx86/SDL2main.lib")
+
+#pragma comment( lib, "SDL_image/libx86/SDL2_image")
 
 #define MAX_BULLET_AMOUNT 10
 
 int main(int argc, char* argv[])
 {
+	IMG_INIT_PNG;
 	SDL_Init(SDL_INIT_EVERYTHING);
 
 	SDL_Window *window;
@@ -17,7 +21,7 @@ int main(int argc, char* argv[])
 	window = SDL_CreateWindow("MyWindow", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 480, 0);
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC);
 
-	SDL_Surface* protoShip = SDL_LoadBMP("images/ProtoShip.bmp");
+	SDL_Surface* protoShip = IMG_Load("images/player.png");
 	SDL_Texture* protoShipTexture = SDL_CreateTextureFromSurface(renderer, protoShip);
 
 	SDL_Surface* beam = SDL_LoadBMP("images/beam.bmp");
@@ -39,18 +43,24 @@ int main(int argc, char* argv[])
 	background_2.x = 820;
 	background_2.y = 0;
 
+	SDL_Rect srcRect;
+	srcRect.x = 0;
+	srcRect.y = 0;
+	srcRect.w = 24;
+	srcRect.h = 24;
+
 	SDL_Rect protoShipRect;
 	protoShipRect.x = 279;
 	protoShipRect.y = 190;
-	protoShipRect.w = 100;
-	protoShipRect.h = 50;
+	protoShipRect.w = 96;
+	protoShipRect.h = 96;
 
 
 	SDL_Rect beamRect;
 	beamRect.x = 641;
 	beamRect.y = 481;
-	beamRect.h = 32;
-	beamRect.w = 32;
+	beamRect.h = 16;
+	beamRect.w = 16;
 
 	bool up = false;
 	bool down = false;
@@ -59,6 +69,7 @@ int main(int argc, char* argv[])
 	bool space = false;
 	bool escape = false;
 	bool isshotfired = false;
+	int framecounterup = 0, framecounterdown = 0;
 
 	bool exit = false;
 
@@ -94,6 +105,7 @@ int main(int argc, char* argv[])
 			}
 
 		}
+		srcRect.x = 0;
 		if (left)
 		{
 			if (protoShipRect.x >= 0)
@@ -102,18 +114,36 @@ int main(int argc, char* argv[])
 
 		if (right)
 		{
-			if (protoShipRect.x <= 540)
+			if (protoShipRect.x <= 530)
 			protoShipRect.x += 10;
 		}
 
 		if (up)
 		{
-			protoShipRect.y -= 10;
+			if (protoShipRect.y >= 10)
+			{
+				protoShipRect.y -= 10;
+				framecounterup++;
+			}
+			srcRect.x = 24;
+			if (framecounterup == 20)
+			{
+				srcRect.x = 48;
+			}
 		}
 
 		if (down)
 		{
-			protoShipRect.y += 10;
+			if (protoShipRect.y <= 400)
+			{
+				protoShipRect.y += 10;
+				framecounterdown++;
+			}
+			srcRect.x = 72;
+			if (framecounterdown == 20)
+			{
+				srcRect.x = 96;
+			}
 		}
 
 		if (space)
@@ -121,7 +151,7 @@ int main(int argc, char* argv[])
 			if (!isshotfired)
 			{
 				beamRect.x = protoShipRect.x;
-				beamRect.y = protoShipRect.y + 18;
+				beamRect.y = protoShipRect.y + 42;
 				isshotfired = true;
 			}
 		}
@@ -134,8 +164,8 @@ int main(int argc, char* argv[])
 			isshotfired = false;
 		}
 
-		background_1.x -= 5;
-		background_2.x -= 5;
+		background_1.x -= 20;
+		background_2.x -= 20;
 
 		if (background_1.x <= -820)
 		{
@@ -151,12 +181,12 @@ int main(int argc, char* argv[])
 		SDL_RenderCopy(renderer, backgroundTexture, NULL, &background_1);
 		SDL_RenderCopy(renderer, backgroundTexture, NULL, &background_2);
 		SDL_RenderCopy(renderer, beamTexture, NULL, &beamRect);
-		SDL_RenderCopy(renderer, protoShipTexture, NULL, &protoShipRect);
+		SDL_RenderCopy(renderer, protoShipTexture, &srcRect, &protoShipRect);
 		SDL_RenderPresent(renderer);
 
 	}
 
-
+	IMG_Quit();
 	SDL_Quit();
 	return(0);
 }
